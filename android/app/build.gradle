@@ -1,0 +1,98 @@
+plugins {
+    id "com.android.application"
+    id "org.jetbrains.kotlin.android"
+    id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"      // Firebase Messaging
+}
+
+/* ===============================
+   🔐 CARGA DE KEYSTORE (UPLOAD KEY)
+   =============================== */
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace "com.docya.paciente"
+    compileSdkVersion 35
+    ndkVersion "25.2.9519653"
+
+
+    packagingOptions {
+        doNotStrip "**/*.so"
+    }
+
+
+    defaultConfig {
+        applicationId "com.docya.paciente"
+        minSdkVersion flutter.minSdkVersion
+        targetSdkVersion 35
+        versionCode 4
+        versionName "1.0.0"
+        multiDexEnabled true
+    }
+
+    // 🔥 JAVA 17
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
+    }
+
+
+    // 🔥 KOTLIN JVM 17
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    /* ===============================
+       🔑 FIRMA RELEASE (UPLOAD KEY)
+       =============================== */
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
+    buildTypes {
+        release {
+            // ✅ FIRMA CORRECTA PARA GOOGLE PLAY
+            signingConfig signingConfigs.release
+
+            minifyEnabled false
+            shrinkResources false
+
+            // 🔥 FIX: evitar fallo al strippear símbolos nativos
+            ndk {
+                debugSymbolLevel 'NONE'
+            }
+        }
+        debug {
+            // debug queda con firma debug (normal)
+        }
+    }
+
+}
+
+dependencies {
+    implementation "androidx.multidex:multidex:2.0.1"
+
+    // 🔥 DESUGARING (REQUERIDO POR flutter_local_notifications)
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
+
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:33.5.1')
+    implementation 'com.google.firebase:firebase-messaging'
+
+    implementation 'com.google.android.gms:play-services-base:18.5.0'
+}
+
+
+flutter {
+    source = "../.."
+}
