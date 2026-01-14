@@ -2,7 +2,7 @@ plugins {
     id "com.android.application"
     id "org.jetbrains.kotlin.android"
     id "dev.flutter.flutter-gradle-plugin"
-    id "com.google.gms.google-services"      // Firebase Messaging
+    id "com.google.gms.google-services" // Firebase
 }
 
 /* ===============================
@@ -17,11 +17,6 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.docya.paciente"
     compileSdkVersion 35
-    ndkVersion "25.2.9519653"
-
-    packagingOptions {
-        doNotStrip "**/*.so"
-    }
 
     defaultConfig {
         applicationId "com.docya.paciente"
@@ -32,14 +27,15 @@ android {
         multiDexEnabled true
     }
 
-    // 🔥 JAVA 17
+    /* ===============================
+       ☕ JAVA / KOTLIN
+       =============================== */
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
         coreLibraryDesugaringEnabled true
     }
 
-    // 🔥 KOTLIN JVM 17
     kotlinOptions {
         jvmTarget = "17"
     }
@@ -60,21 +56,18 @@ android {
 
     buildTypes {
         release {
-            // 👉 SOLO firma si existe key.properties (LOCAL)
+            // 👉 firma SOLO si existe key.properties (local)
             if (keystorePropertiesFile.exists()) {
                 signingConfig signingConfigs.release
             }
 
+            // ❌ nada de minify / shrink / strip
             minifyEnabled false
             shrinkResources false
-
-            // 🔥 FIX STRIP NATIVO
-            ndk {
-                debugSymbolLevel 'NONE'
-            }
         }
+
         debug {
-            // debug con firma debug
+            // debug normal
         }
     }
 }
@@ -82,7 +75,7 @@ android {
 dependencies {
     implementation "androidx.multidex:multidex:2.0.1"
 
-    // 🔥 DESUGARING (flutter_local_notifications)
+    // 🔥 DESUGARING (requerido por flutter_local_notifications)
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
 
     // Firebase
