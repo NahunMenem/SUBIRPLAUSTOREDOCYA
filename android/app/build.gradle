@@ -6,7 +6,7 @@ plugins {
 }
 
 /* ===============================
-   🔐 CARGA DE KEYSTORE (UPLOAD KEY)
+   🔐 CARGA DE KEYSTORE (SOLO LOCAL)
    =============================== */
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file("key.properties")
@@ -19,11 +19,9 @@ android {
     compileSdkVersion 35
     ndkVersion "25.2.9519653"
 
-
     packagingOptions {
         doNotStrip "**/*.so"
     }
-
 
     defaultConfig {
         applicationId "com.docya.paciente"
@@ -41,48 +39,50 @@ android {
         coreLibraryDesugaringEnabled true
     }
 
-
     // 🔥 KOTLIN JVM 17
     kotlinOptions {
         jvmTarget = "17"
     }
 
     /* ===============================
-       🔑 FIRMA RELEASE (UPLOAD KEY)
+       🔑 FIRMA RELEASE (CONDICIONAL)
        =============================== */
     signingConfigs {
         release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
+            if (keystorePropertiesFile.exists()) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
         }
     }
 
     buildTypes {
         release {
-            // ✅ FIRMA CORRECTA PARA GOOGLE PLAY
-            signingConfig signingConfigs.release
+            // 👉 SOLO firma si existe key.properties (LOCAL)
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
 
             minifyEnabled false
             shrinkResources false
 
-            // 🔥 FIX: evitar fallo al strippear símbolos nativos
+            // 🔥 FIX STRIP NATIVO
             ndk {
                 debugSymbolLevel 'NONE'
             }
         }
         debug {
-            // debug queda con firma debug (normal)
+            // debug con firma debug
         }
     }
-
 }
 
 dependencies {
     implementation "androidx.multidex:multidex:2.0.1"
 
-    // 🔥 DESUGARING (REQUERIDO POR flutter_local_notifications)
+    // 🔥 DESUGARING (flutter_local_notifications)
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
 
     // Firebase
@@ -92,7 +92,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-base:18.5.0'
 }
 
-
 flutter {
     source = "../.."
 }
+
